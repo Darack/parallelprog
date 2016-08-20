@@ -1,4 +1,4 @@
-package given;
+package de.hsb.paraprog.echo.node;
 
 /**
  * This interface defines the methods of each node participating in the echo
