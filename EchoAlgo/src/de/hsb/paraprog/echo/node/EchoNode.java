@@ -1,8 +1,14 @@
 package de.hsb.paraprog.echo.node;
 
+import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class EchoNode extends NodeAbstract {
+	
+	private static Logger logger = LoggerFactory.getLogger(EchoNode.class);
 
 	public EchoNode(String name, boolean initiator, CountDownLatch startLatch) {
 		super(name, initiator, startLatch);
@@ -13,8 +19,23 @@ public class EchoNode extends NodeAbstract {
 	private Node initNode;
 	private int msgCnt;
 	
-	private boolean isInitiator() {
-		return initiator;
+	private boolean awake() {
+		return !initNode.equals(null) || initiator;
+	}
+	
+	private void printTree() {
+		logger.info("all nodes successfully initiated!");
+		// TODO print tree
+	}
+	
+	public void printNeighbours() {
+		logger.info(name + "\tmy neighbours are: ");
+		StringBuilder output = new StringBuilder("");
+		for (Node node : neighbours) {
+			output.append((node.toString() + " "));
+		}
+		output.append("\n");
+		logger.info(output.toString());
 	}
 
 	@Override
@@ -24,26 +45,40 @@ public class EchoNode extends NodeAbstract {
 
 	@Override
 	public void wakeup(Node neighbour) {
-		// TODO Auto-generated method stub
-		if (initNode.equals(null) && !isInitiator()) {
+		if (!awake()) {
 			initNode = neighbour;
+			Iterator<Node> it = neighbours.iterator();
+			while (it.hasNext()) {
+				Node node = it.next();
+				if (!node.equals(initNode)) {
+					node.wakeup(this);
+				}
+			}
 		}
 		++msgCnt;
 		if (msgCnt == neighbours.size()) {
-			// TODO do stuff depending on bool initiator (echo or success msg)
+			if (initiator) {
+				printTree();
+			} else {
+				echo(initNode, null);
+			}
 		}
 	}
 	
 	@Override
 	public void echo(Node neighbour, Object data) {
-		// TODO Auto-generated method stub
-		
+		++msgCnt;
+		if (initiator && msgCnt == neighbours.size()) {
+			printTree();
+		}
 	}
 
 	@Override
 	public void setupNeighbours(Node... neighbours) {
-		// TODO Auto-generated method stub
-		
+		for (Node node : neighbours) {
+        	this.neighbours.add(node);
+        	hello(node);
+        }
 	}
 
 }
