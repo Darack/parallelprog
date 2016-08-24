@@ -29,12 +29,11 @@ public class EchoNode extends NodeAbstract {
 	}
 	
 	public void printNeighbours() {
-		logger.info(name + "\tmy neighbours are: ");
 		StringBuilder output = new StringBuilder("");
+		output.append(name + ": my neighbours are | ");
 		for (Node node : neighbours) {
 			output.append((node.toString() + " "));
 		}
-		output.append("\n");
 		logger.info(output.toString());
 	}
 
@@ -79,7 +78,7 @@ public class EchoNode extends NodeAbstract {
 		for (Node node : neighbours) {
         	this.neighbours.add(node);
         	logger.debug(this.toString() + ": " + "added new node to my neighbours (" + node.toString() + ")");
-        	hello(node);
+        	node.hello(this);
         }
 	}
 

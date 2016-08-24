@@ -17,6 +17,9 @@ public class EchoLauncher {
 		EchoNode en1 = new EchoNode("master", true, start);
 		EchoNode en2 = new EchoNode("slave", false, start);
 		en1.setupNeighbours(en2);
+		
+		en1.printNeighbours();
+		en2.printNeighbours();
 	}
 
 }
