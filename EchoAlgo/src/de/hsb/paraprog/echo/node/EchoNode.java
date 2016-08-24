@@ -41,6 +41,7 @@ public class EchoNode extends NodeAbstract {
 	@Override
 	public void hello(Node neighbour) {
 		neighbours.add(neighbour);
+		logger.debug(this.toString() + ": " + "new hello from neighbour (" + neighbour.toString() + ")");
 	}
 
 	@Override
@@ -77,6 +78,7 @@ public class EchoNode extends NodeAbstract {
 	public void setupNeighbours(Node... neighbours) {
 		for (Node node : neighbours) {
         	this.neighbours.add(node);
+        	logger.debug(this.toString() + ": " + "added new node to my neighbours (" + node.toString() + ")");
         	hello(node);
         }
 	}
