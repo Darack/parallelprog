@@ -21,9 +21,6 @@ public class SpanningTree {
 		private Node node;
 		private Set<TreeNode> descendants;
 		
-		public void addDescendant(TreeNode treeNode) {
-			descendants.add(treeNode);
-		}
 		public void printSection() {
 			logger.info(node.toString());
 			for (TreeNode desc : descendants) {
@@ -37,9 +34,12 @@ public class SpanningTree {
 	}
 	private TreeNode m_Root;
 	
-	public void printTree() {
+	public void print() {
 		logger.info("spanning tree: ");
 		m_Root.printSection();
+	}
+	public void addSubTree(Object tree) {
+		m_Root.descendants.add(((SpanningTree) tree).m_Root);
 	}
 	
 }

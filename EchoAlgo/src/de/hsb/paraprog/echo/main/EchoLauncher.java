@@ -20,6 +20,7 @@ public class EchoLauncher {
 		
 		en1.printNeighbours();
 		en2.printNeighbours();
+		start.countDown();
 	}
 
 }

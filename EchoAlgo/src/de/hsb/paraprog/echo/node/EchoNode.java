@@ -6,6 +6,8 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.hsb.paraprog.echo.algo.SpanningTree;
+
 public class EchoNode extends NodeAbstract {
 	
 	private static Logger logger = LoggerFactory.getLogger(EchoNode.class);
@@ -14,10 +16,14 @@ public class EchoNode extends NodeAbstract {
 		super(name, initiator, startLatch);
 		initNode = null;
 		msgCnt = 0;
+		tree = new SpanningTree(this);
+		start = startLatch;
 	}
 	
 	private Node initNode;
 	private int msgCnt;
+	private SpanningTree tree;
+	private CountDownLatch start;
 	
 	private boolean awake() {
 		return !initNode.equals(null) || initiator;
@@ -25,7 +31,7 @@ public class EchoNode extends NodeAbstract {
 	
 	private void printTree() {
 		logger.info("all nodes successfully initiated!");
-		// TODO print tree
+		tree.print();
 	}
 	
 	public void printNeighbours() {
@@ -68,6 +74,7 @@ public class EchoNode extends NodeAbstract {
 	@Override
 	public void echo(Node neighbour, Object data) {
 		++msgCnt;
+		tree.addSubTree(data);
 		if (initiator && msgCnt == neighbours.size()) {
 			printTree();
 		}
@@ -80,6 +87,23 @@ public class EchoNode extends NodeAbstract {
         	logger.debug(this.toString() + ": " + "added new node to my neighbours (" + node.toString() + ")");
         	node.hello(this);
         }
+	}
+	
+	@Override
+	public void run() {
+		logger.debug("starting run");
+		try {
+			start.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			logger.error(e.getMessage());
+		}
+		if (initiator && !neighbours.isEmpty()) {
+			Iterator<Node> iter = neighbours.iterator();
+			while (iter.hasNext()) {
+				iter.next().wakeup(this);
+	        }
+		}
 	}
 
 }
