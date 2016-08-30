@@ -39,7 +39,8 @@ public class SpanningTree {
 		m_Root.printSection();
 	}
 	public void addSubTree(Object tree) {
-		m_Root.descendants.add(((SpanningTree) tree).m_Root);
+		m_Root.descendants.add(
+				((SpanningTree) tree).m_Root);
 	}
 	
 }

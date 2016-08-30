@@ -26,7 +26,7 @@ public class EchoNode extends NodeAbstract {
 	private CountDownLatch start;
 	
 	private boolean awake() {
-		return !initNode.equals(null) || initiator;
+		return initNode != null || initiator;
 	}
 	
 	private void printTree() {
@@ -50,34 +50,19 @@ public class EchoNode extends NodeAbstract {
 	}
 
 	@Override
-	public void wakeup(Node neighbour) {
+	public synchronized void wakeup(Node neighbour) {
 		if (!awake()) {
 			initNode = neighbour;
-			Iterator<Node> it = neighbours.iterator();
-			while (it.hasNext()) {
-				Node node = it.next();
-				if (!node.equals(initNode)) {
-					node.wakeup(this);
-				}
-			}
 		}
 		++msgCnt;
-		if (msgCnt == neighbours.size()) {
-			if (initiator) {
-				printTree();
-			} else {
-				echo(initNode, null);
-			}
-		}
+		notifyAll();
 	}
 	
 	@Override
-	public void echo(Node neighbour, Object data) {
+	public synchronized void echo(Node neighbour, Object data) {
 		++msgCnt;
 		tree.addSubTree(data);
-		if (initiator && msgCnt == neighbours.size()) {
-			printTree();
-		}
+		notifyAll();
 	}
 
 	@Override
@@ -94,16 +79,35 @@ public class EchoNode extends NodeAbstract {
 		logger.debug("starting run");
 		try {
 			start.await();
+			synchronized(this) {
+				while (!awake()) {
+					wait();
+				}
+				wakeupNeighbours();
+				while (msgCnt != neighbours.size()) {
+					wait();
+				}
+				if (initiator) {
+					printTree();
+				} else {
+					echo(initNode, tree);
+				}
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
-		if (initiator && !neighbours.isEmpty()) {
-			Iterator<Node> iter = neighbours.iterator();
-			while (iter.hasNext()) {
-				iter.next().wakeup(this);
-	        }
-		}
+		logger.debug(this.toString() + ": terminating...");
+	}
+	
+	private void wakeupNeighbours() {
+		Iterator<Node> iter = neighbours.iterator();
+		while (iter.hasNext()) {
+			Node current = iter.next();
+			if (current != this.initNode) {
+				current.wakeup(this);
+			}
+        }
 	}
 
 }
