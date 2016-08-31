@@ -1,5 +1,7 @@
 package de.hsb.paraprog.echo.main;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
@@ -14,15 +16,30 @@ public class EchoLauncher {
 	public static void main(String[] args) {
 		logger.debug("application start!");
 		CountDownLatch start = new CountDownLatch(1);
-		EchoNode en1 = new EchoNode("master", true, start);
-		EchoNode en2 = new EchoNode("slave", false, start);
-		en1.setupNeighbours(en2);
+		List<EchoNode> echo = new ArrayList<EchoNode>();
 		
-		en1.printNeighbours();
-		en2.printNeighbours();
+		echo.add(new EchoNode("0", true, start));
+		echo.add(new EchoNode("1", false, start));
+		echo.add(new EchoNode("2", false, start));
+		echo.add(new EchoNode("3", false, start));
+		echo.add(new EchoNode("4", false, start));
+		echo.add(new EchoNode("5", false, start));
+		echo.add(new EchoNode("6", false, start));
 		
-		en1.start();
-		en2.start();
+		echo.get(0).setupNeighbours(echo.get(1));
+		echo.get(0).setupNeighbours(echo.get(2));
+		echo.get(0).setupNeighbours(echo.get(3));
+		echo.get(0).setupNeighbours(echo.get(4));
+		echo.get(1).setupNeighbours(echo.get(2));
+		echo.get(1).setupNeighbours(echo.get(5));
+		echo.get(2).setupNeighbours(echo.get(3));
+		echo.get(2).setupNeighbours(echo.get(5));
+		echo.get(5).setupNeighbours(echo.get(6));
+		
+		for (EchoNode echoNode : echo) {
+			echoNode.printNeighbours();
+			echoNode.start();
+		}
 		
 		start.countDown();
 	}

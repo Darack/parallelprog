@@ -60,6 +60,7 @@ public class EchoNode extends NodeAbstract {
 	
 	@Override
 	public synchronized void echo(Node neighbour, Object data) {
+		logger.debug(neighbour.toString() + ": echo send!");
 		++msgCnt;
 		tree.addSubTree(data);
 		notifyAll();
@@ -87,11 +88,12 @@ public class EchoNode extends NodeAbstract {
 				while (msgCnt != neighbours.size()) {
 					wait();
 				}
-				if (initiator) {
-					printTree();
-				} else {
-					echo(initNode, tree);
-				}
+			}
+			
+			if (initiator) {
+				printTree();
+			} else {
+				initNode.echo(this, tree);
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
