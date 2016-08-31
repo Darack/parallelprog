@@ -12,18 +12,20 @@ public class EchoNode extends NodeAbstract {
 	
 	private static Logger logger = LoggerFactory.getLogger(EchoNode.class);
 
-	public EchoNode(String name, boolean initiator, CountDownLatch startLatch) {
+	public EchoNode(String name, boolean initiator, CountDownLatch startLatch, CountDownLatch endLatch) {
 		super(name, initiator, startLatch);
 		initNode = null;
 		msgCnt = 0;
 		tree = new SpanningTree(this);
 		start = startLatch;
+		end = endLatch;
 	}
 	
 	private Node initNode;
 	private int msgCnt;
 	private SpanningTree tree;
 	private CountDownLatch start;
+	private CountDownLatch end;
 	
 	private boolean awake() {
 		return initNode != null || initiator;
@@ -77,24 +79,40 @@ public class EchoNode extends NodeAbstract {
 	
 	@Override
 	public void run() {
-		logger.debug("starting run");
 		try {
 			start.await();
-			synchronized(this) {
-				while (!awake()) {
-					wait();
+			logger.debug("starting run");
+//			while (true) {
+				synchronized(this) {
+					if (initiator) {
+						logger.debug(this.toString() + ": waiting...");
+//						wait((long) (Math.random() * 2000) + 1000);
+						wait((long) (10));
+					}
+					while (!awake()) {
+						logger.debug(this.toString() + ": waiting for awakening...");
+						wait();
+					}
 				}
+				
+				logger.debug(this.toString() + ": I am awake, waking up neighbours...");
 				wakeupNeighbours();
-				while (msgCnt != neighbours.size()) {
-					wait();
+				
+				synchronized(this) {
+					while (msgCnt != neighbours.size()) {
+						logger.debug(this.toString() + ": waiting for neighbours...");
+						wait();
+					}
 				}
-			}
-			
-			if (initiator) {
-				printTree();
-			} else {
-				initNode.echo(this, tree);
-			}
+				
+				if (initiator) {
+					printTree();
+				} else {
+					initNode.echo(this, tree);
+				}
+//				end.countDown();
+//				end.await();
+//			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			logger.error(e.getMessage());
