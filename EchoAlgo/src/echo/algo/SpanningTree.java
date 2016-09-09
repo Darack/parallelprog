@@ -13,7 +13,7 @@ import interfaces.Node;
 
 public class SpanningTree {
 	
-	private static Logger logger = LoggerFactory.getLogger(EchoNode.class);
+	private static Logger logger = LoggerFactory.getLogger(SpanningTree.class);
 	
 	class TreeNode {
 		public TreeNode(Node node) {
