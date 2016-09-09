@@ -82,12 +82,12 @@ public class EchoNode extends NodeAbstract {
 		try {
 			start.await();
 			logger.debug("starting run");
-//			while (true) {
+			while (true) {
 				synchronized(this) {
 					if (initiator) {
 						logger.debug(this.toString() + ": waiting...");
-//						wait((long) (Math.random() * 2000) + 1000);
-						wait((long) (10));
+						wait((long) (Math.random() * 2000) + 1000);
+//						wait((long) (10));
 					}
 					while (!awake()) {
 						logger.debug(this.toString() + ": waiting for awakening...");
@@ -110,9 +110,13 @@ public class EchoNode extends NodeAbstract {
 				} else {
 					initNode.echo(this, tree);
 				}
-//				end.countDown();
-//				end.await();
-//			}
+				end.countDown();
+				end.await();
+				
+				if (initiator) {
+					logger.info("starting new cycle!\n");
+				}
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			logger.error(e.getMessage());
@@ -129,5 +133,5 @@ public class EchoNode extends NodeAbstract {
 			}
         }
 	}
-
+	
 }
