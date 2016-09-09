@@ -1,4 +1,4 @@
-package de.hsb.paraprog.echo.node;
+package echo.node;
 
 import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
@@ -6,7 +6,9 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.hsb.paraprog.echo.algo.SpanningTree;
+import echo.algo.SpanningTree;
+import interfaces.Node;
+import interfaces.NodeAbstract;
 
 public class EchoNode extends NodeAbstract {
 	
@@ -82,41 +84,37 @@ public class EchoNode extends NodeAbstract {
 		try {
 			start.await();
 			logger.debug("starting run");
-			while (true) {
-				synchronized(this) {
-					if (initiator) {
-						logger.debug(this.toString() + ": waiting...");
-						wait((long) (Math.random() * 2000) + 1000);
-//						wait((long) (10));
-					}
-					while (!awake()) {
-						logger.debug(this.toString() + ": waiting for awakening...");
-						wait();
-					}
-				}
-				
-				logger.debug(this.toString() + ": I am awake, waking up neighbours...");
-				wakeupNeighbours();
-				
-				synchronized(this) {
-					while (msgCnt != neighbours.size()) {
-						logger.debug(this.toString() + ": waiting for neighbours...");
-						wait();
-					}
-				}
-				
+			
+			synchronized(this) {
 				if (initiator) {
-					printTree();
-				} else {
-					initNode.echo(this, tree);
+					logger.debug(this.toString() + ": waiting...");
+//					wait((long) (Math.random() * 2000) + 1000);
+					wait((long) (10));
 				}
-				end.countDown();
-				end.await();
-				
-				if (initiator) {
-					logger.info("starting new cycle!\n");
+				while (!awake()) {
+					logger.debug(this.toString() + ": waiting for awakening...");
+					wait();
 				}
 			}
+			
+			logger.debug(this.toString() + ": I am awake, waking up neighbours...");
+			wakeupNeighbours();
+			
+			synchronized(this) {
+				while (msgCnt != neighbours.size()) {
+					logger.debug(this.toString() + ": waiting for neighbours...");
+					wait();
+				}
+			}
+			
+			if (initiator) {
+				printTree();
+			} else {
+				initNode.echo(this, tree);
+			}
+//			end.countDown();
+//			end.await();
+			
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			logger.error(e.getMessage());

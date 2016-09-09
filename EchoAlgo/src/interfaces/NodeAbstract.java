@@ -1,4 +1,4 @@
-package de.hsb.paraprog.echo.node;
+package interfaces;
 
 import java.util.HashSet;
 import java.util.Set;

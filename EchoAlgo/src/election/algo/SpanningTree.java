@@ -1,4 +1,4 @@
-package de.hsb.paraprog.echo.algo;
+package election.algo;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -8,8 +8,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.hsb.paraprog.echo.node.EchoNode;
-import de.hsb.paraprog.echo.node.Node;
+import echo.node.EchoNode;
+import interfaces.Node;
 
 public class SpanningTree {
 	
