@@ -19,7 +19,7 @@ public class ElectionLauncher {
 		CountDownLatch end = new CountDownLatch(7);
 		List<ElectionNode> echo = new ArrayList<ElectionNode>();
 		
-		echo.add(new ElectionNode("0", true, start, end));
+//		echo.add(new ElectionNode("0", true, start, end));
 		
 //		echo.add(new ElectionNode("1", false, start, end));
 //		echo.add(new ElectionNode("2", false, start, end));
@@ -42,10 +42,10 @@ public class ElectionLauncher {
 //		echo.get(5).setupNeighbours(echo.get(6));
 //		echo.get(7).setupNeighbours(echo.get(0));
 		
-		for (ElectionNode ElectionNode : echo) {
-			ElectionNode.printNeighbours();
-			ElectionNode.start();
-		}
+//		for (ElectionNode ElectionNode : echo) {
+//			ElectionNode.printNeighbours();
+//			ElectionNode.start();
+//		}
 		
 		logger.info("startLatch go!");
 		start.countDown();

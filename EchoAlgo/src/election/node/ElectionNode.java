@@ -1,135 +1,149 @@
 package election.node;
 
-import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import election.algo.SpanningTree;
-import interfaces.Node;
-import interfaces.NodeAbstract;
+import echo.node.EchoNode;
 
-public class ElectionNode extends NodeAbstract {
-	
-	private static Logger logger = LoggerFactory.getLogger(ElectionNode.class);
-
-	public ElectionNode(String name, boolean initiator, CountDownLatch startLatch, CountDownLatch endLatch) {
-		super(name, initiator, startLatch);
-		initNode = null;
-		msgCnt = 0;
-		tree = new SpanningTree(this);
-		start = startLatch;
-		end = endLatch;
+public class ElectionNode extends Thread {
+	class Pair<T1, T2>{
+		Pair(T1 first, T2 second){
+			this.first = first;
+			this.second = second;
+		}
+		public T1 first;
+		public T2 second;
 	}
+	private int id;
+	private CountDownLatch startLatch;
+	private List<ElectionNode> neighbours;
 	
-	private Node initNode;
+	private volatile boolean wakeUpCalled; // TODO
+	private volatile boolean messageSent;
+	
 	private int msgCnt;
-	private SpanningTree tree;
-	private CountDownLatch start;
-	private CountDownLatch end;
 	
-	private boolean awake() {
-		return initNode != null || initiator;
-	}
+	private boolean initiator;
 	
-	private void printTree() {
-		logger.info("all nodes successfully initiated!");
-		tree.print();
-	}
 	
-	public void printNeighbours() {
-		StringBuilder output = new StringBuilder("");
-		output.append(name + ": my neighbours are | ");
-		for (Node node : neighbours) {
-			output.append((node.toString() + " "));
-		}
-		logger.info(output.toString());
-	}
+	private static Logger logger = LoggerFactory.getLogger(EchoNode.class);
+	
 
-	@Override
-	public void hello(Node neighbour) {
-		neighbours.add(neighbour);
-		logger.debug(this.toString() + ": " + "new hello from neighbour (" + neighbour.toString() + ")");
-	}
-
-	@Override
-	public synchronized void wakeup(Node neighbour) {
-		if (!awake()) {
-			initNode = neighbour;
-		}
-		++msgCnt;
-		notifyAll();
-	}
+	private Queue<Pair<ElectionNode, Integer> > CallerBuffer;
+	private Queue<ElectionNode> CallerQueue;
+	private int electedId;
 	
-	@Override
-	public synchronized void echo(Node neighbour, Object data) {
-		logger.debug(neighbour.toString() + ": echo send!");
-		++msgCnt;
-		tree.addSubTree(data);
-		notifyAll();
-	}
-
-	@Override
-	public void setupNeighbours(Node... neighbours) {
-		for (Node node : neighbours) {
-        	this.neighbours.add(node);
-        	logger.debug(this.toString() + ": " + "added new node to my neighbours (" + node.toString() + ")");
-        	node.hello(this);
-        }
+	private static final Long ERICS_WEIGHT = Long.MAX_VALUE;
+	private static final float INITIATOR_CHANCE = 10;
+	private static final int MAX_WAIT = 10;
+	
+	private static final boolean RUN = true;
+	
+	public ElectionNode(int id, CountDownLatch startLatch, List<ElectionNode> neighbours) {
+		this.id = id;
+		this.startLatch = startLatch;
+		this.neighbours = neighbours;
+		messageSent = false;
+		msgCnt = 0;
+		initiator = false;
+		CallerBuffer = new LinkedList();
+		CallerQueue = new LinkedList();
+		electedId = -1;
 	}
 	
 	@Override
 	public void run() {
 		try {
-			start.await();
-			logger.debug("starting run");
-			
-			synchronized(this) {
-				if (initiator) {
-					logger.debug(this.toString() + ": waiting...");
-//					wait((long) (Math.random() * 2000) + 1000);
-					wait((long) (10));
-				}
-				while (!awake()) {
-					logger.debug(this.toString() + ": waiting for awakening...");
-					wait();
-				}
-			}
-			
-			logger.debug(this.toString() + ": I am awake, waking up neighbours...");
-			wakeupNeighbours();
-			
-			synchronized(this) {
-				while (msgCnt != neighbours.size()) {
-					logger.debug(this.toString() + ": waiting for neighbours...");
-					wait();
-				}
-			}
-			
-			if (initiator) {
-				printTree();
-			} else {
-				initNode.echo(this, tree);
-			}
-//			end.countDown();
-//			end.await();
-			
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			logger.error(e.getMessage());
+			startLatch.await();
+		} catch (InterruptedException e1) {
+			logger.debug(e1.getMessage());
 		}
-		logger.debug(this.toString() + ": terminating...");
+		logger.debug("starting run");
+		
+		while (RUN) {
+			if (!initiator && Math.random() * 100 < INITIATOR_CHANCE) {
+				initiate();
+			}
+			
+			synchronized (this) {
+				try {
+					if (wakeUpCalled()) {
+						wait((int) (Math.random() * MAX_WAIT)); // http://stackoverflow.com/questions/13249835/java-does-wait-release-lock-from-synchronized-block
+					}
+				} catch (InterruptedException e) {
+					logger.debug(e.getMessage());
+				} 
+			}
+			
+			if ( wakeUpCalled() ) {
+				int greatest = electedId;
+				ElectionNode node = null;
+				synchronized (this) {
+					for (Pair<ElectionNode, Integer> p : CallerBuffer) {
+						if (electedId < p.second) {
+							electedId = p.second;
+							node = p.first;
+						}
+						CallerQueue.add(p.first);
+					}
+					CallerBuffer.clear();
+				}
+				if(node != null) {
+					sendWave(node, greatest);
+				} else {
+					sendResult();
+				}
+					
+			}
+			if (messageSent && msgCnt == 0) {
+				sendResult();
+				if (initiator && id == electedId) {
+					// TODO echo
+				}
+			}
+		}
 	}
 	
-	private void wakeupNeighbours() {
-		Iterator<Node> iter = neighbours.iterator();
-		while (iter.hasNext()) {
-			Node current = iter.next();
-			if (current != this.initNode) {
-				current.wakeup(this);
+	private synchronized boolean wakeUpCalled(){
+		return !CallerBuffer.isEmpty();
+	}
+	private void initiate() {
+		
+	}
+	private synchronized void receive(int res){
+		--msgCnt;
+		if (res > electedId) {
+			electedId = res;
+		}
+		notifyAll();
+	}
+	private void sendResult(){
+		messageSent = false;
+		for(ElectionNode n : CallerQueue){
+			n.receive(electedId);
+		}
+		CallerQueue.clear();
+	}
+	private void sendWave(ElectionNode caller, int val){
+		messageSent = true;
+		for(ElectionNode n : neighbours ){
+			if(n != caller){
+				n.wakeUp(this, val);
+				synchronized (this) {
+					++msgCnt;
+				}
 			}
-        }
+		}
+	}
+	private synchronized void wakeUp(ElectionNode caller, int id){
+		CallerBuffer.add(new Pair<>(caller, id) );
+		notifyAll();
 	}
 	
 }
