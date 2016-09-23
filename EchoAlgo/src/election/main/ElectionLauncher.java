@@ -16,10 +16,33 @@ public class ElectionLauncher {
 	public static void main(String[] args) {
 		logger.debug("application start!");
 		CountDownLatch start = new CountDownLatch(1);
-		CountDownLatch end = new CountDownLatch(7);
-		List<ElectionNode> echo = new ArrayList<ElectionNode>();
+		List<ElectionNode> nodes = new ArrayList<ElectionNode>();
 		
-//		echo.add(new ElectionNode("0", true, start, end));
+		nodes.add(new ElectionNode(0, start));
+		nodes.add(new ElectionNode(1, start));
+		nodes.add(new ElectionNode(2, start));
+		nodes.add(new ElectionNode(3, start));
+		nodes.add(new ElectionNode(4, start));
+		nodes.add(new ElectionNode(5, start));
+		nodes.add(new ElectionNode(6, start));
+		nodes.add(new ElectionNode(7, start));
+		nodes.add(new ElectionNode(8, start));
+		nodes.add(new ElectionNode(9, start));
+		nodes.add(new ElectionNode(10, start));
+		nodes.add(new ElectionNode(11, start));
+		
+
+		nodes.get(0).setupNeighbours(nodes.get(1));
+		nodes.get(0).setupNeighbours(nodes.get(2));
+		nodes.get(1).setupNeighbours(nodes.get(3));
+		nodes.get(3).setupNeighbours(nodes.get(4));
+		nodes.get(3).setupNeighbours(nodes.get(5));
+		nodes.get(3).setupNeighbours(nodes.get(6));
+		nodes.get(6).setupNeighbours(nodes.get(7));
+		nodes.get(7).setupNeighbours(nodes.get(8));
+		nodes.get(8).setupNeighbours(nodes.get(9));
+		nodes.get(9).setupNeighbours(nodes.get(10));
+		nodes.get(10).setupNeighbours(nodes.get(11));
 		
 //		echo.add(new ElectionNode("1", false, start, end));
 //		echo.add(new ElectionNode("2", false, start, end));
@@ -42,10 +65,10 @@ public class ElectionLauncher {
 //		echo.get(5).setupNeighbours(echo.get(6));
 //		echo.get(7).setupNeighbours(echo.get(0));
 		
-//		for (ElectionNode ElectionNode : echo) {
-//			ElectionNode.printNeighbours();
-//			ElectionNode.start();
-//		}
+		for (ElectionNode ElectionNode : nodes) {
+			ElectionNode.printNeighbours();
+			ElectionNode.start();
+		}
 		
 		logger.info("startLatch go!");
 		start.countDown();
