@@ -8,18 +8,18 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import interfaces.Node;
+import election.node.ElectionNode.ExtendedEchoNode;
 
 public class SpanningTree {
 	
 	private static Logger logger = LoggerFactory.getLogger(SpanningTree.class);
 	
 	class TreeNode {
-		public TreeNode(Node node) {
-			this.node = node;
+		public TreeNode(ExtendedEchoNode extendedEchoNode) {
+			this.node = extendedEchoNode;
 			descendants = new HashSet<TreeNode>();
 		}
-		private Node node;
+		private ExtendedEchoNode node;
 		public String father = "";
 		public Set<TreeNode> descendants;
 		
@@ -31,8 +31,8 @@ public class SpanningTree {
 		}
 	}
 	
-	public SpanningTree(Node node) {
-		m_Root = new TreeNode(node);
+	public SpanningTree(ExtendedEchoNode extendedEchoNode) {
+		m_Root = new TreeNode(extendedEchoNode);
 	}
 	private TreeNode m_Root;
 	Queue<TreeNode> queue = new LinkedList<TreeNode>();
