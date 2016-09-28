@@ -155,7 +155,6 @@ public class ElectionNode extends Thread {
 	
 	private boolean isAllowedToCandidate;
 	
-	private static final Long ERICS_WEIGHT = Long.MAX_VALUE;
 	private static final float INITIATOR_CHANCE = 10f;
 	private static final int MAX_WAIT = 10;
 	
@@ -189,18 +188,7 @@ public class ElectionNode extends Thread {
 			} catch (InterruptedException e1) {
 				logger.debug(e1.getMessage());
 			}
-			synchronized (System.out) {
-				System.out.print("Node Nr."+id + " msgCnt: " + msgCnt + " callerQueue: " + CallerQueue.size() + " isWhite? "+isAllowedToCandidate);
-				for (ElectionNode n : CallerQueue) {
-					System.out.print(" | nodeId " + n.id + " nodeElected " + n.electedId + " init? " + n.initiator);
-				}
-				System.out.print(" Buffer{ ");
-				for(Pair<ElectionNode, Integer> n : CallerBuffer){
-					System.out.print(" | nodeId " + n.first.id + " currentElected " + electedId+ " offer "+n.second);
-				}
-				System.out.print(" } ");
-				System.out.println();
-			}
+			
 			
 			Queue<Executable> tempExecutableQueue = new LinkedList<>();
 			synchronized (this) {
@@ -214,7 +202,7 @@ public class ElectionNode extends Thread {
 			}
 			
 //			logger.debug("RUN");
-			if (!initiator && isAllowedToCandidate && Math.random() * 100 < INITIATOR_CHANCE && ERICS_WEIGHT > Integer.MAX_VALUE) {
+			if (!initiator && isAllowedToCandidate && Math.random() * 100 < INITIATOR_CHANCE) {
 				logger.debug("INIT");
 				initiate();
 			}
@@ -225,7 +213,7 @@ public class ElectionNode extends Thread {
 						
 						long timeout = (long) (Math.random() * MAX_WAIT);
 						if(timeout != 0)
-							wait(timeout); // http://stackoverflow.com/questions/13249835/java-does-wait-release-lock-from-synchronized-block
+							wait(timeout); 
 						
 					}
 				} catch (InterruptedException e) {
@@ -264,7 +252,7 @@ public class ElectionNode extends Thread {
 				
 				for(Pair<ElectionNode, Integer> n : tmpList){
 					if (n.second != tmpElectedId || (node != null && n.first != node)) {
-						System.out.println("Me Nr."+this.id+" eliminated wave! kill, kill them all! " + n.second);
+						logger.debug("Me Nr."+this.id+" eliminated a wave with " + n.second);
 						n.first.receive(tmpElectedId, this);
 					} else {
 						CallerQueue.add(n.first);
@@ -277,7 +265,7 @@ public class ElectionNode extends Thread {
 			if (messageSent && msgCnt == 0) {
 				sendResult();
 				if (initiator && id == electedId) {
-					logger.info("Me "+id+" has won the fucking WAR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ");
+					logger.info("Me Nr. "+id+" has won the election and starting the Echo-Algo ");
 					echoNode.echoNodeSetInitiator();
 				}
 			}
@@ -291,7 +279,7 @@ public class ElectionNode extends Thread {
 	}
 	
 	private void echoCompleted() {
-		System.out.println("Echo Completed by "+id);
+		logger.debug("Echo Completed by Nr. "+id+ " reseting loop vars");
 		CountDownLatch latchStart = new CountDownLatch(1);
 		for(ElectionNode n : echoNode.tree.getTree() ){
 			if(n != this){
@@ -338,19 +326,18 @@ public class ElectionNode extends Thread {
 				electedId = id;
 			}
 			for (ElectionNode electionNode : CallerQueue) {
-				System.out.println("blaaa");
 				electionNode.receive(electedId, this);
 			}
 			CallerQueue.clear();
 			sendWave(null, id);
 		} else {
-			logger.debug("close init");
+			logger.debug("close init because of greater candidate");
 		}
 		initiator = true;
 	}
 	
-	private synchronized void receive(int res, ElectionNode n){
-		System.out.println("Me "+this.id+" Received a "+res + " from " + n.id);
+	private synchronized void receive(final int res,final ElectionNode n){
+		logger.debug("Me Nr."+this.id+" received a "+res + " from " + n.id);
 		boolean wasSmaller = false;
 		if (res > electedId) {
 			electedId = res;
@@ -360,7 +347,7 @@ public class ElectionNode extends Thread {
 		if(wasSmaller){
 			ExecutableQueue.add(new Executable(){
 				public void execute(){
-					System.out.println("Me "+ElectionNode.this.id+" Sending update with "+electedId);
+					logger.debug("Me Nr."+ElectionNode.this.id+" sending update with "+electedId);
 					boolean wasInside = false;
 					for (ElectionNode node : CallerQueue) {
 						if (node != n) {
@@ -389,7 +376,7 @@ public class ElectionNode extends Thread {
 	}
 	
 	private void sendResult(){
-		System.out.println("Me "+this.id+" Sending rersult with "+electedId);
+		logger.debug("Me Nr."+this.id+" sending rersult with "+electedId);
 		messageSent = false;
 		isAllowedToCandidate = false;
 		for(ElectionNode n : CallerQueue){
@@ -409,7 +396,7 @@ public class ElectionNode extends Thread {
 		messageSent = true;
 	}
 	private synchronized void wakeUp(ElectionNode caller, int id){
-		System.out.println("Me Nr."+this.id+ " was waked up by "+caller.id+" with: "+id);
+		logger.debug("Me Nr."+this.id+ " was waked up by "+caller.id+" with: "+id);
 		CallerBuffer.add(new Pair<>(caller, id) );
 		notifyAll();
 	}
