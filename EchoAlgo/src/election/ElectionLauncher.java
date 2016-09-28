@@ -13,8 +13,6 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import echo.EchoNode;
-
 public class ElectionLauncher {
 	
 	private static Logger logger = LoggerFactory.getLogger(ElectionLauncher.class);

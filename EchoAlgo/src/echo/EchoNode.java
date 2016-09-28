@@ -28,15 +28,6 @@ public class EchoNode extends NodeAbstract {
 	private CountDownLatch start;
 //	private CountDownLatch end;
 	
-	private boolean awake() {
-		return initNode != null || initiator;
-	}
-	
-	private void printTree() {
-		logger.info("all nodes successfully initiated!");
-		tree.print();
-	}
-	
 	public void printNeighbours() {
 		StringBuilder output = new StringBuilder("");
 		output.append(name + ": my neighbours are | ");
@@ -119,6 +110,15 @@ public class EchoNode extends NodeAbstract {
 			logger.error(e.getMessage());
 		}
 		logger.debug(this.toString() + ": terminating...");
+	}
+	
+	private boolean awake() {
+		return initNode != null || initiator;
+	}
+	
+	private void printTree() {
+		logger.info("all nodes successfully initiated!");
+		tree.print();
 	}
 	
 	private void wakeupNeighbours() {

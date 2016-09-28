@@ -38,8 +38,6 @@ public class EchoLauncher {
 			CommandLineParser parser = new DefaultParser();
 			CommandLine cmd = parser.parse(options, args);
 			
-			logger.debug("debug");
-			
 			if(cmd.hasOption(testOption)) {
 				testCase = Integer.parseInt(cmd.getOptionValue(testOption));
 				logger.debug("testcase: " + testCase);
@@ -47,16 +45,14 @@ public class EchoLauncher {
 					throw new ParseException("wrong test case number!");
 				}
 			} else {
-				logger.debug("else");
 				formatter.printHelp( PROG_NAME, options, true );
 				System.exit(1);
 			}
 		} catch (ParseException e1) {
-			logger.debug("exception");
 			formatter.printHelp( PROG_NAME, options, true );
 			System.exit(1);
 		}
-				
+		
 		CountDownLatch start = new CountDownLatch(1);
 		CountDownLatch end = new CountDownLatch(7);
 		List<EchoNode> echo = new ArrayList<EchoNode>();
@@ -108,6 +104,7 @@ public class EchoLauncher {
 			echo.get(2).setupNeighbours(echo.get(4));
 			echo.get(2).setupNeighbours(echo.get(5));
 			echo.get(0).setupNeighbours(echo.get(5));
+			echo.get(4).setupNeighbours(echo.get(5));
 			
 			break;
 		}
