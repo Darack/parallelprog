@@ -1,6 +1,5 @@
-package election.node;
+package election;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,8 +8,6 @@ import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import election.algo.SpanningTree;
 
 
 public class ElectionNode extends Thread {
@@ -178,8 +175,6 @@ public class ElectionNode extends Thread {
 	
 	@Override
 	public void run() {
-		// TODO Schleife
-		
 		logger.debug("starting run");
 		
 		while (RUN) {
@@ -270,7 +265,8 @@ public class ElectionNode extends Thread {
 				}
 			}
 			
-			try { // TODO entfernen
+			// delay for readability
+			try { 
 				Thread.sleep(200);
 			} catch (InterruptedException e) {
 				logger.debug(e.toString());

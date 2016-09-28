@@ -1,4 +1,4 @@
-package election.algo;
+package election;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,8 +10,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import election.node.ElectionNode;
-import election.node.ElectionNode.ExtendedEchoNode;
+import election.ElectionNode.ExtendedEchoNode;
 
 public class SpanningTree {
 	

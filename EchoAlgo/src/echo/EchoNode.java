@@ -1,4 +1,4 @@
-package echo.node;
+package echo;
 
 import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
@@ -6,7 +6,6 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import echo.algo.SpanningTree;
 import interfaces.Node;
 import interfaces.NodeAbstract;
 
@@ -20,14 +19,14 @@ public class EchoNode extends NodeAbstract {
 		msgCnt = 0;
 		tree = new SpanningTree(this);
 		start = startLatch;
-		end = endLatch;
+//		end = endLatch;
 	}
 	
 	private Node initNode;
 	private int msgCnt;
 	private SpanningTree tree;
 	private CountDownLatch start;
-	private CountDownLatch end;
+//	private CountDownLatch end;
 	
 	private boolean awake() {
 		return initNode != null || initiator;
