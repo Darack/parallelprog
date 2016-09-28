@@ -1,5 +1,7 @@
 package election.algo;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -8,6 +10,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import election.node.ElectionNode;
 import election.node.ElectionNode.ExtendedEchoNode;
 
 public class SpanningTree {
@@ -29,6 +32,15 @@ public class SpanningTree {
 		public String getName() {
 			return node.toString();
 		}
+		private Collection<ElectionNode> combine(){
+			Collection<ElectionNode> col = new ArrayList<>();
+			col.add(node.getParent() );
+			for(TreeNode e : descendants){
+				col.addAll(e.combine() );
+			}
+			return col;
+		}
+		
 	}
 	
 	public SpanningTree(ExtendedEchoNode extendedEchoNode) {
@@ -63,6 +75,15 @@ public class SpanningTree {
 	
 	public void addSubTree(Object tree) {
 		m_Root.descendants.add(((SpanningTree) tree).m_Root);
+	}
+	
+	
+	public Collection<ElectionNode> getTree() {
+		return m_Root.combine();
+	}
+	
+	public void reset() {
+		m_Root.descendants.clear();
 	}
 	
 }

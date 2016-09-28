@@ -1,5 +1,6 @@
 package election.node;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,6 +37,9 @@ public class ElectionNode extends Thread {
 		private CountDownLatch start;
 		private boolean echoInitiator;
 		
+		public ElectionNode getParent(){
+			return ElectionNode.this;
+		}
 		private boolean awake() {
 			return initNode != null || echoInitiator;
 		}
@@ -98,6 +102,7 @@ public class ElectionNode extends Thread {
 				
 				if (echoInitiator) {
 					printTree();
+					echoCompleted();
 				} else {
 					initNode.echo(this, tree);
 				}
@@ -174,14 +179,16 @@ public class ElectionNode extends Thread {
 	
 	@Override
 	public void run() {
-		try {
-			startLatch.await();
-		} catch (InterruptedException e1) {
-			logger.debug(e1.getMessage());
-		}
+		// TODO Schleife
+		
 		logger.debug("starting run");
 		
 		while (RUN) {
+			try {
+				startLatch.await();
+			} catch (InterruptedException e1) {
+				logger.debug(e1.getMessage());
+			}
 			synchronized (System.out) {
 				System.out.print("Node Nr."+id + " msgCnt: " + msgCnt + " callerQueue: " + CallerQueue.size() + " isWhite? "+isAllowedToCandidate);
 				for (ElectionNode n : CallerQueue) {
@@ -232,7 +239,7 @@ public class ElectionNode extends Thread {
 				ElectionNode node = null;
 				int tmpElectedId;
 				List<Pair<ElectionNode,Integer> > tmpList = new LinkedList<>();
-				synchronized (this) { // TODO
+				synchronized (this) {
 					for (Pair<ElectionNode, Integer> p : CallerBuffer) {
 						if (electedId < p.second) {
 							electedId = p.second;
@@ -271,7 +278,6 @@ public class ElectionNode extends Thread {
 				sendResult();
 				if (initiator && id == electedId) {
 					logger.info("Me "+id+" has won the fucking WAR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ");
-					// TODO echo
 					echoNode.echoNodeSetInitiator();
 				}
 			}
@@ -282,6 +288,40 @@ public class ElectionNode extends Thread {
 				logger.debug(e.toString());
 			}
 		}
+	}
+	
+	private void echoCompleted() {
+		System.out.println("Echo Completed by "+id);
+		CountDownLatch latchStart = new CountDownLatch(1);
+		for(ElectionNode n : echoNode.tree.getTree() ){
+			if(n != this){
+				n.electedId = -1;
+				n.startLatch = latchStart;
+				n.isAllowedToCandidate = true;
+				n.initiator = false;
+				n.messageSent = false;
+				n.echoNode.tree.reset(); //= new SpanningTree(n.echoNode);
+				n.echoNode.start = latchStart;
+				n.echoNode.echoInitiator = false;
+				n.echoNode.initNode = null;
+				n.echoNode.msgCnt = 0;
+//				n.echoNode = new ExtendedEchoNode(n.id + "", latchStart);
+				new Thread(n.echoNode).start();
+			}
+		}
+		electedId = -1;
+		startLatch = latchStart;
+		isAllowedToCandidate = true;
+		initiator = false;
+		messageSent = false;
+		echoNode.tree.reset(); // = new SpanningTree( echoNode );
+		echoNode.start = latchStart;
+		echoNode.echoInitiator = false;
+		echoNode.initNode = null;
+		echoNode.msgCnt = 0;
+//		echoNode = new ExtendedEchoNode(id + "", latchStart);
+		new Thread(echoNode).start();
+		latchStart.countDown();
 	}
 	
 	private synchronized boolean wakeUpCalled(){
