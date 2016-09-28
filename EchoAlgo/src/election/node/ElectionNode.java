@@ -194,10 +194,18 @@ public class ElectionNode extends Thread {
 				System.out.print(" } ");
 				System.out.println();
 			}
-			for(Executable e : ExecutableQueue){
+			
+			Queue<Executable> tempExecutableQueue = new LinkedList<>();
+			synchronized (this) {
+				for(Executable e : ExecutableQueue){
+					tempExecutableQueue.add(e);
+				}
+				ExecutableQueue.clear();
+			}
+			for(Executable e : tempExecutableQueue){
 				e.execute();
 			}
-			ExecutableQueue.clear();
+			
 //			logger.debug("RUN");
 			if (!initiator && isAllowedToCandidate && Math.random() * 100 < INITIATOR_CHANCE && ERICS_WEIGHT > Integer.MAX_VALUE) {
 				logger.debug("INIT");
@@ -301,17 +309,14 @@ public class ElectionNode extends Thread {
 		initiator = true;
 	}
 	
-	private void receive(int res, ElectionNode n){
+	private synchronized void receive(int res, ElectionNode n){
 		System.out.println("Me "+this.id+" Received a "+res + " from " + n.id);
 		boolean wasSmaller = false;
-		synchronized(this){
-			if (res > electedId) {
-				electedId = res;
-				wasSmaller = true;		
-			}
-			--msgCnt;
-			notifyAll();
+		if (res > electedId) {
+			electedId = res;
+			wasSmaller = true;		
 		}
+		notifyAll();
 		if(wasSmaller){
 			ExecutableQueue.add(new Executable(){
 				public void execute(){
@@ -333,7 +338,14 @@ public class ElectionNode extends Thread {
 				}
 			});
 		}
-		
+	
+		ExecutableQueue.add(new Executable() {
+			
+			@Override
+			public void execute() {
+				--msgCnt;
+			}
+		});
 	}
 	
 	private void sendResult(){

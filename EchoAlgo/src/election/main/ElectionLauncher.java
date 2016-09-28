@@ -43,6 +43,8 @@ public class ElectionLauncher {
 		nodes.get(8).setupNeighbours(nodes.get(9));
 		nodes.get(9).setupNeighbours(nodes.get(10));
 		nodes.get(10).setupNeighbours(nodes.get(11));
+//		nodes.get(2).setupNeighbours(nodes.get(6));
+//		nodes.get(2).setupNeighbours(nodes.get(11));
 		
 //		echo.add(new ElectionNode("1", false, start, end));
 //		echo.add(new ElectionNode("2", false, start, end));
