@@ -30,10 +30,11 @@ public class ElectionLauncher {
 		nodes.add(new ElectionNode(9, start));
 		nodes.add(new ElectionNode(10, start));
 		nodes.add(new ElectionNode(11, start));
-		
-
+//		
+//
 		nodes.get(0).setupNeighbours(nodes.get(1));
 		nodes.get(0).setupNeighbours(nodes.get(2));
+//		nodes.get(1).setupNeighbours(nodes.get(2));
 		nodes.get(1).setupNeighbours(nodes.get(3));
 		nodes.get(3).setupNeighbours(nodes.get(4));
 		nodes.get(3).setupNeighbours(nodes.get(5));

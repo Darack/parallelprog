@@ -4,7 +4,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
+import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
@@ -153,6 +155,8 @@ public class ElectionNode extends Thread {
 	private Queue<Executable> ExecutableQueue;
 	private int electedId;
 	
+	private Map<Integer, Integer> receivedSet;
+	
 	private boolean isAllowedToCandidate;
 	
 	private static final Long ERICS_WEIGHT = Long.MAX_VALUE;
@@ -174,6 +178,7 @@ public class ElectionNode extends Thread {
 		CallerQueue = new LinkedList<ElectionNode>();
 		ExecutableQueue = new LinkedList<>();
 		electedId = -1;
+		receivedSet = new TreeMap<>();
 		isAllowedToCandidate = true;
 	}
 	
@@ -269,9 +274,8 @@ public class ElectionNode extends Thread {
 					} else {
 						CallerQueue.add(n.first);
 					}
+					rememberReceived(n.first, n.second);
 				}
-				
-				
 				
 			}
 			if (messageSent && msgCnt == 0) {
@@ -384,8 +388,33 @@ public class ElectionNode extends Thread {
 			@Override
 			public void execute() {
 				--msgCnt;
+				rememberReceived(n, res);
 			}
 		});
+	}
+	
+	private void rememberReceived(ElectionNode key, int value) {
+		receivedSet.put(key.id, value);
+		boolean containsAll = true;
+		for (ElectionNode node : neighbours) {
+			if (!(receivedSet.containsKey(node.id) && receivedSet.get(node.id) == value)) {
+				containsAll = false;
+			}
+		}
+		if (containsAll && value != id) {
+			synchronized (System.out) {
+				
+				System.out.print("CYCLE DEDECTION FROM "+id+" {");
+				for(Map.Entry<Integer,Integer> i : receivedSet.entrySet() ){
+					System.out.print( "Key: "+i.getKey()+" Value: "+i.getValue()+ " | ");
+				}
+				System.out.println(" }");
+			}
+			for (ElectionNode node : CallerQueue) {
+				node.receive(value, this);
+			}
+			CallerQueue.clear();
+		}
 	}
 	
 	private void sendResult(){
